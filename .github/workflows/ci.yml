@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+      - run: bundle exec rubocop
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["3.1", "3.2", "3.3"]
+    services:
+      kubemq:
+        image: kubemq/kubemq:latest
+        ports:
+          - 50000:50000
+    env:
+      KUBEMQ_ADDRESS: localhost:50000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: Wait for KubeMQ gRPC port
+        shell: bash
+        run: |
+          for _ in $(seq 1 30); do
+            (echo >/dev/tcp/localhost/50000) >/dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          echo "KubeMQ did not become ready on port 50000"
+          exit 1
+      - name: RSpec (SimpleCov enforces 95% minimum via spec_helper)
+        run: bundle exec rspec
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+      - run: bundle exec yard doc --fail-on-warning

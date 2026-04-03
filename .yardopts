@@ -1,0 +1,14 @@
+--markup markdown
+--output-dir doc
+--exclude lib/kubemq/proto
+lib/**/*.rb
+-
+README.md
+CHANGELOG.md
+docs/getting-started.md
+docs/events-pubsub.md
+docs/queues.md
+docs/commands-queries.md
+docs/configuration.md
+docs/error-handling.md
+TROUBLESHOOTING.md
