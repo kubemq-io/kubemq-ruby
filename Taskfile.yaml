@@ -1,0 +1,46 @@
+version: '3'
+
+tasks:
+  install:
+    cmds:
+      - bundle install
+
+  test:
+    cmds:
+      - bundle exec rspec spec/unit
+
+  test-integration:
+    cmds:
+      - bundle exec rspec spec/integration
+
+  test-all:
+    cmds:
+      - bundle exec rspec
+
+  lint:
+    cmds:
+      - bundle exec rubocop
+
+  lint-fix:
+    cmds:
+      - bundle exec rubocop -a
+
+  docs:
+    cmds:
+      - bundle exec yard doc
+
+  proto:
+    cmds:
+      - bundle exec rake proto:generate
+
+  coverage:
+    cmds:
+      - bundle exec rspec
+
+  build:
+    cmds:
+      - gem build kubemq.gemspec
+
+  burnin:
+    cmds:
+      - cd burnin && ruby app.rb
