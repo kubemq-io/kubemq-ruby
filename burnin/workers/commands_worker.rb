@@ -144,11 +144,16 @@ module KubeMQBurnin
       end
 
       def start_senders(channel_names)
+        senders_per_ch = @config.commands_senders_per_channel
+        rate_per_sender = @config.commands_rate.to_f / senders_per_ch
+
         channel_names.each do |ch|
-          thread = Thread.new do
-            rate_limited_loop(@config.commands_rate) { send_one_command(ch) }
+          senders_per_ch.times do |_si|
+            thread = Thread.new do
+              rate_limited_loop(rate_per_sender) { send_one_command(ch) }
+            end
+            @threads << thread
           end
-          @threads << thread
         end
       end
 
