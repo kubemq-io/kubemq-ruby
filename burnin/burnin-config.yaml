@@ -1,0 +1,5 @@
+metrics:
+  port: 8888
+  report_interval: 30s
+broker:
+  address: "localhost:50000"

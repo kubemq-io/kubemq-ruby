@@ -151,27 +151,32 @@ module KubeMQBurnin
       end
 
       def start_senders(channel_names)
+        producers_per_ch = @config.queues_producers_per_channel
+        rate_per_producer = @config.queues_rate.to_f / producers_per_ch
+
         channel_names.each do |ch|
-          thread = Thread.new do
-            rate_limited_loop(@config.queues_rate) do
-              break if @cancel
+          producers_per_ch.times do |_pi|
+            thread = Thread.new do
+              rate_limited_loop(rate_per_producer) do
+                break if @cancel
 
-              start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-              payload = generate_payload
-              msg = KubeMQ::Queues::QueueMessage.new(channel: ch, metadata: 'burnin', body: payload)
-              @sender.send_queue_message(msg)
+                start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+                payload = generate_payload
+                msg = KubeMQ::Queues::QueueMessage.new(channel: ch, metadata: 'burnin', body: payload)
+                @sender.send_queue_message_stream(msg)
 
-              elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
-              @mutex.synchronize { @sent_count += 1 }
-              Metrics.messages_sent_total.increment(labels: { worker: @name, channel: ch })
-              Metrics.messages_sent_bytes_total.increment(by: payload.bytesize, labels: { worker: @name, channel: ch })
-              Metrics.send_duration_seconds.observe(elapsed, labels: { worker: @name })
-              update_send_rate
-            rescue StandardError
-              Metrics.errors_total.increment(labels: { worker: @name, error_type: 'send' })
+                elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
+                @mutex.synchronize { @sent_count += 1 }
+                Metrics.messages_sent_total.increment(labels: { worker: @name, channel: ch })
+                Metrics.messages_sent_bytes_total.increment(by: payload.bytesize, labels: { worker: @name, channel: ch })
+                Metrics.send_duration_seconds.observe(elapsed, labels: { worker: @name })
+                update_send_rate
+              rescue StandardError
+                Metrics.errors_total.increment(labels: { worker: @name, error_type: 'send' })
+              end
             end
+            @threads << thread
           end
-          @threads << thread
         end
       end
 
