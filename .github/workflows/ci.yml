@@ -23,7 +23,7 @@ jobs:
         ruby: ["3.1", "3.2", "3.3"]
     services:
       kubemq:
-        image: kubemq/kubemq:latest
+        image: europe-docker.pkg.dev/kubemq/images/kubemq-next:latest
         ports:
           - 50000:50000
     env:
