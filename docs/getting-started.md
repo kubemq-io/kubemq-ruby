@@ -9,7 +9,7 @@ This guide walks you from zero to a working KubeMQ application in under five min
 - A running **KubeMQ broker** — the quickest option is Docker:
 
 ```bash
-docker run -d -p 50000:50000 -p 9090:9090 kubemq/kubemq:latest
+docker run -d -p 50000:50000 -p 9090:9090 europe-docker.pkg.dev/kubemq/images/kubemq-next:latest
 ```
 
 Port 50000 is the gRPC endpoint; port 9090 is the optional web dashboard.
